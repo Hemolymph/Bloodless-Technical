@@ -35,6 +35,8 @@ An attack on an occupied space deals damage to the creature occupying that space
 
 At the end of the attack, the turn ends, and the opposing player's turn begins, following the exact same structure.
 
+If the turn ends before an attack can happen, the attack does not happen.
+
 ## Winning A Game
 When a player does damage to the health pool and there are less points in it than damage dealt, that player wins the game.
 
@@ -118,3 +120,6 @@ Whenever a second instance of this object is played, it is exiled, and the alrea
 
 ## Syntax
 See: [[Syntax]]
+
+## Damage
+When creatures do damage or attack, they do so from left to right from the perspective of the active player. Creatures controlled by the active player attack first.
