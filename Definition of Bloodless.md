@@ -1,15 +1,17 @@
 Bloodless' runtime is based on Events.
 
 ## Definitions
-**Ability**: Text on a card describing what the card does.
+**Text**: Text on a card describing what the card does, when it does it and how it interacts with other things.
 
-**Event**: Thing that happens in the game
+**Event**: An imaginary object that represents the a change in the state of the game.
 
-**Triggered Ability**: Ability that modifies events
+**Executing an Event:** To perform the changes represented by the event.
 
-**Active Ability**: An ability that requires a cost.
+**Triggered Ability / TA**: Ability that reacts to events, often resulting in the creation of another one.
 
-**Effect**: Set of instructions that can create events
+**Event Modifying Triggered Ability / EMTA:** An ability that reacts to events, modifying them without creating another. They have higher precedence than regular TAs.
+
+**Event Creating Triggered Ability / EMTA:** An ability that reacts to events, creating events. They have low precedence.
 
 ## The State
 The state of the game contains:
@@ -18,37 +20,49 @@ The state of the game contains:
 - Event modifiers
 - Effect queue
 - Event history
-- Current turn
+- Current phase
 
-## Events
-Events are an intent to modify the game. They have unique identities.
+### The Initial State
+The initial state consists of the following:
+- The two player states, with the decks they've brought to the game, empty discard piles and empty hands.
+- The two 
 
-Inside events, indefinite references are bound through unique identifiers stored in the event handler. The unique identity is assigned even before an object to be identified has been designated.
+## Triggered Abilities
+Events are an intent to modify the game. They have unique identities and may contain internal structure.
 
-This means that future effects can alter things that are only known after the result of previous ones. It's also means that an effect fails if the binding is not set.
+Triggered abilities are objects that represent a reaction to events. They also contain information about the origin of the event. Different types of abilities have a level of precedence.
 
-It is possible for a reference to be based on yet another reference, such as "you" from a card.
+When events are queued, the first one is popped from the queue and begins to be modified.
 
-### Effect Requests
-An effect request occurs before any effect. Effect requests exist so that effects may be denied by "do not" effects.
+First, relevant EMTAs are triggered, modifying the event and possibly denying its execution and further modification.
 
-The only internal structure of an effect request is the requested effect.
+Second, the event is executed.
 
-For example:
+Finally, Triggered Abilities are run on it, possibly creating new events.
 
-- `Whenever you play a creature, draw a card` will create an effect request of drawing a card.
+### Event Matching
+Events can be matched for certain patterns. For example, considering that a Draw effect contains the player that draws and the deck that is drawn from, a Draw match contains information about which players count as a match, which decks count as a match, and which are excluded. This information is called an Event Pattern.
+An ability's trigger is an event pattern.
 
-- `Whenever you draw a card, you do not` will see that request and make it result in nothing. Because of this, no card is drawn.
+### Reactions and Binding
+When a TA is successfuly matched, the reaction may depend on objects that only come into relevance after the event is executed. However, the reaction is defined *before* any triggering happens. Consider the following example:
 
-### Payment Request
-A player can attempt to pay for a cost. The inner structure of a payment request is:
-- The identity of the target cost
-- An array of player choice requests.
+You play a creature with the following text: `Whenever you draw a card, play it.` At this time, there is no relevant card draw - the reaction doesn't know what will be played, but the trigger is capable of supplying that information the moment it happens. This happens through a process called **binding**.
 
-## The Event Handler
-The event handler performs this cycle every time an event is pushed.
+When a TA is triggered, it binds all objects found by the event pattern. The objects are bound to a pattern of their own, which, for the previous example, would contain the fact that the object has been drawn, but it would also contain the fact that the object can be played and is a card.
 
-- Organize event modifications.
-- Pop first event in the event queue and modify it.
-- Run modified events.
-- Perform win check.
+These bindings are passed down to the reaction. The reaction searches through the bindings, looking for the latest "playable" match.
+
+### A Complete Overview
+With this, the complete life of an event is the following:
+
+- Events are queued.
+- An event is popped.
+- EMTAs are run on it.
+  - The EMTAs' triggers check for a match in the event. The ones that match it, modify it.
+- The resulting event is executed.
+- ECTAs are run on it.
+  - The ECTAs' triggers check for a match in the event. The ones that match it:
+    - Bind any relevant object matches
+    - Provide the object matches to the reaction
+    - The reaction is pushed to the front of the event queue if all the objects it needs are present in the list of bindings.
