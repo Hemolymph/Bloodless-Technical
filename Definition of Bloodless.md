@@ -11,7 +11,7 @@ Bloodless' runtime is based on Events.
 
 **Event Modifying Triggered Ability / EMTA:** An ability that reacts to events, modifying them without creating another. They have higher precedence than regular TAs.
 
-**Event Creating Triggered Ability / EMTA:** An ability that reacts to events, creating events. They have low precedence.
+**Event Creating Triggered Ability / ECTA:** An ability that reacts to events, creating events. They have low precedence.
 
 ## The State
 The state of the game contains:
